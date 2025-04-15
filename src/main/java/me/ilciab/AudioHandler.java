@@ -11,6 +11,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.nio.ByteBuffer;
 
@@ -74,5 +75,17 @@ public class AudioHandler implements AudioSendHandler {
         });
 
 
+    }
+
+    public void stop(SlashCommandInteractionEvent event) {
+        trackScheduler.stopTrack();
+    }
+
+    public void pause() {
+        if (audioPlayer.isPaused()) {
+            audioPlayer.setPaused(false);
+        } else {
+            audioPlayer.setPaused(true);
+        }
     }
 }

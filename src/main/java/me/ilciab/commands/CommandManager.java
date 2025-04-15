@@ -22,6 +22,25 @@ public class CommandManager extends ListenerAdapter {
     private AudioHandler audioHandler;
 
     @Override
+    public void onGuildReady(@NotNull GuildReadyEvent event) {
+        List<CommandData> commandData = new ArrayList<>();
+        commandData.add(Commands.slash("play", "Plays the selected song")
+                .addOption(OptionType.STRING, "song", "The song to play", true));
+        commandData.add(Commands.slash("skip" ,  "Skips the current song"));
+        commandData.add(Commands.slash("pause", "Pauses or resumes the current song"));
+        commandData.add(Commands.slash("stop", "Stops the current song"));
+
+        commandData.add(Commands.slash("nowplaying", "Shows the current song"));
+        commandData.add(Commands.slash("queue", "Shows the queue"));
+
+        commandData.add(Commands.slash("join", "Joins the voice channel"));
+        commandData.add(Commands.slash("leave", "Leaves the voice channel"));
+
+        event.getGuild().updateCommands().addCommands(commandData).queue();
+        audioManager = event.getGuild().getAudioManager();
+    }
+
+    @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         String command = event.getName();
         switch (command) {
@@ -29,10 +48,10 @@ public class CommandManager extends ListenerAdapter {
                 play(event);
                 break;
             case "stop":
-                event.reply("Hello!").queue();
+                audioHandler.stop(event);
                 break;
-            case "resume":
-                event.reply("Hello!").queue();
+            case "pause":
+                audioHandler.pause();
                 break;
             case "join":
                 System.out.println("Member: " + event.getUser().getEffectiveName());
@@ -47,20 +66,6 @@ public class CommandManager extends ListenerAdapter {
                 event.reply("Unknown command").queue();
                 break;
         }
-    }
-
-    @Override
-    public void onGuildReady(@NotNull GuildReadyEvent event) {
-        List<CommandData> commandData = new ArrayList<>();
-        commandData.add(Commands.slash("play", "Plays the selected song")
-                .addOption(OptionType.STRING, "song", "The song to play", true));
-        commandData.add(Commands.slash("stop", "Stops the current song"));
-        commandData.add(Commands.slash("resume", "Resumes the current song"));
-        commandData.add(Commands.slash("join", "Joins the voice channel"));
-        commandData.add(Commands.slash("leave", "Leaves the voice channel"));
-
-        event.getGuild().updateCommands().addCommands(commandData).queue();
-        audioManager = event.getGuild().getAudioManager();
     }
 
     private void play(SlashCommandInteractionEvent event) {
