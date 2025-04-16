@@ -20,6 +20,8 @@ public class CommandManager extends ListenerAdapter {
 
     private AudioManager audioManager;
     private AudioHandler audioHandler;
+    private MessageChannelUnion channel;
+    private SlashCommandInteractionEvent event;
 
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
@@ -29,29 +31,41 @@ public class CommandManager extends ListenerAdapter {
         commandData.add(Commands.slash("skip" ,  "Skips the current song"));
         commandData.add(Commands.slash("pause", "Pauses or resumes the current song"));
         commandData.add(Commands.slash("stop", "Stops the current song"));
+        commandData.add(Commands.slash("repeat", "Toggles the repeat mode"));
 
         commandData.add(Commands.slash("nowplaying", "Shows the current song"));
         commandData.add(Commands.slash("queue", "Shows the queue"));
 
         commandData.add(Commands.slash("join", "Joins the voice channel"));
         commandData.add(Commands.slash("leave", "Leaves the voice channel"));
-
+        
         event.getGuild().updateCommands().addCommands(commandData).queue();
         audioManager = event.getGuild().getAudioManager();
+        audioHandler = new AudioHandler();
     }
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+        this.event = event;
+        channel = event.getChannel();
         String command = event.getName();
+        audioHandler.setChannel(event.getChannel());
         switch (command) {
             case "play":
-                play(event);
+                play();
                 break;
             case "stop":
                 audioHandler.stop(event);
                 break;
+            case "skip":
+                audioHandler.skipTrack();
+                event.reply("Skipped the current song!").queue();
+                break;
             case "pause":
                 audioHandler.pause();
+                break;
+            case "queue":
+                audioHandler.showQueue();
                 break;
             case "join":
                 System.out.println("Member: " + event.getUser().getEffectiveName());
@@ -68,8 +82,7 @@ public class CommandManager extends ListenerAdapter {
         }
     }
 
-    private void play(SlashCommandInteractionEvent event) {
-        MessageChannelUnion channel = event.getChannel();
+    private void play() {
         String song = event.getOption("song").getAsString();
         Member member = event.getMember();
         assert member != null;
@@ -86,7 +99,6 @@ public class CommandManager extends ListenerAdapter {
 
     private void joinVoiceChannel(Member member) {
         AudioChannelUnion voiceChannel = member.getVoiceState().getChannel();
-        audioHandler = new AudioHandler();
         audioManager = member.getVoiceState().getChannel().getGuild().getAudioManager();
         audioManager.setSelfDeafened(true);
         audioManager.setSendingHandler(audioHandler);

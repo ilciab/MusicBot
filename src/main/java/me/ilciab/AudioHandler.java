@@ -11,15 +11,17 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.nio.ByteBuffer;
 
 public class AudioHandler implements AudioSendHandler {
 
-    private AudioPlayerManager playerManager;
+    private final AudioPlayerManager playerManager;
     private final AudioPlayer audioPlayer;
-    private TrackScheduler trackScheduler;
+    private final TrackScheduler trackScheduler;
+    private MessageChannelUnion channel;
     private AudioFrame lastFrame;
 
     @Override
@@ -39,8 +41,8 @@ public class AudioHandler implements AudioSendHandler {
     }
 
     public AudioHandler() {
-        YoutubeAudioSourceManager youtube = new YoutubeAudioSourceManager(true);             //youtube audio source manager from youtube-source
-        playerManager = new DefaultAudioPlayerManager();                                                //adding the default audio player manager replacing
+        YoutubeAudioSourceManager youtube = new YoutubeAudioSourceManager(true);             // YouTube audio source manager from youtube-source
+        playerManager = new DefaultAudioPlayerManager();                                                // adding the default audio player manager replacing
         playerManager.registerSourceManager(youtube);                                                   // the default one with the youtube-source one
         AudioSourceManagers.registerRemoteSources(playerManager, com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
         audioPlayer = playerManager.createPlayer();
@@ -50,31 +52,47 @@ public class AudioHandler implements AudioSendHandler {
 
 
     public void play(String song) {
-        final String[] answer = new String[1];
-        playerManager.loadItem(song, new AudioLoadResultHandler() {
+        String identifier = song.startsWith("http") ? song : "ytsearch:" + song;
+        playerManager.loadItem(identifier, new AudioLoadResultHandler() {
+
             @Override
             public void trackLoaded(AudioTrack track) {
-                trackScheduler.queue(track);
+                channel.sendMessage("Using trackloaded(), something went wrong?").queue();
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                for (AudioTrack track : playlist.getTracks()) {
-                    //trackScheduler.queue(track);
+                if(playlist.isSearchResult()){
+                    AudioTrack firstItem = playlist.getTracks().get(0);
+                    trackScheduler.queue(firstItem);
+                    channel.sendMessage("Added to queue: " + firstItem.getInfo().title).queue();
+                } else {
+                    int size = 0;
+                    for (AudioTrack track : playlist.getTracks()) {
+                        trackScheduler.queue(track);
+                        size++;
+                    }
+                    channel.sendMessage("Playlist loaded: " + playlist.getName() + "with " + size + " elements").queue();
                 }
             }
 
             @Override
             public void noMatches() {
+                channel.sendMessage("No matches found for " + song).queue();
             }
 
 
             @Override
             public void loadFailed(FriendlyException throwable) {
+                channel.sendMessage("Could not play " + song + ": " + throwable.getMessage()).queue();
             }
         });
 
 
+    }
+
+    public void skipTrack() {
+        trackScheduler.skipTrack();
     }
 
     public void stop(SlashCommandInteractionEvent event) {
@@ -82,10 +100,15 @@ public class AudioHandler implements AudioSendHandler {
     }
 
     public void pause() {
-        if (audioPlayer.isPaused()) {
-            audioPlayer.setPaused(false);
-        } else {
-            audioPlayer.setPaused(true);
-        }
+        audioPlayer.setPaused(!audioPlayer.isPaused());
+    }
+
+    public void setChannel(MessageChannelUnion channel) {
+        this.channel = channel;
+        trackScheduler.setChannel(channel);
+    }
+
+    public void showQueue() {
+        trackScheduler.showQueue();
     }
 }

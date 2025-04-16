@@ -11,13 +11,13 @@ import java.util.Arrays;
 
 public class Main {
 
-
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.load();
         String token = dotenv.get("DISCORD_TOKEN");
         JDA jda = JDABuilder.createDefault(token, Arrays.asList(GatewayIntent.values())).build();
         jda.addEventListener(new CommandManager());
         jda.addEventListener(new ShutUp());
+
     }
 
 }
