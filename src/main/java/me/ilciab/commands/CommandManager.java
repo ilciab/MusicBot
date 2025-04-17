@@ -1,6 +1,7 @@
 package me.ilciab.commands;
 
 import me.ilciab.AudioHandler;
+import me.ilciab.api.BotApi;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -25,23 +26,9 @@ public class CommandManager extends ListenerAdapter {
 
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
-        List<CommandData> commandData = new ArrayList<>();
-        commandData.add(Commands.slash("play", "Plays the selected song")
-                .addOption(OptionType.STRING, "song", "The song to play", true));
-        commandData.add(Commands.slash("skip" ,  "Skips the current song"));
-        commandData.add(Commands.slash("pause", "Pauses or resumes the current song"));
-        commandData.add(Commands.slash("stop", "Stops the current song"));
-        commandData.add(Commands.slash("repeat", "Toggles the repeat mode"));
-
-        commandData.add(Commands.slash("nowplaying", "Shows the current song"));
-        commandData.add(Commands.slash("queue", "Shows the queue"));
-
-        commandData.add(Commands.slash("join", "Joins the voice channel"));
-        commandData.add(Commands.slash("leave", "Leaves the voice channel"));
-        
-        event.getGuild().updateCommands().addCommands(commandData).queue();
         audioManager = event.getGuild().getAudioManager();
         audioHandler = new AudioHandler();
+        BotApi.setAudioHandler(audioHandler);
     }
 
     @Override

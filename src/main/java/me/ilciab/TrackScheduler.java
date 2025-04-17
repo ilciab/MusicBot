@@ -6,6 +6,8 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
+import org.eclipse.jetty.util.ajax.JSON;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,5 +117,16 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         // Audio track has been unable to provide us any audio, might want to just start a new track
+    }
+
+    public Object getNowPlaying() {
+        JSONObject nowPlaying = new JSONObject();
+        nowPlaying.put("Title", player.getPlayingTrack().getInfo().title);
+        nowPlaying.put("Author", player.getPlayingTrack().getInfo().author);
+        nowPlaying.put("Paused", player.isPaused());
+        nowPlaying.put("Duration", player.getPlayingTrack().getInfo().length);
+        nowPlaying.put("Position", player.getPlayingTrack().getPosition());
+        nowPlaying.put("Volume", player.getVolume());
+        return nowPlaying;
     }
 }

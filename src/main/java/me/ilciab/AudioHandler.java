@@ -46,6 +46,7 @@ public class AudioHandler implements AudioSendHandler {
         playerManager.registerSourceManager(youtube);                                                   // the default one with the youtube-source one
         AudioSourceManagers.registerRemoteSources(playerManager, com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
         audioPlayer = playerManager.createPlayer();
+        audioPlayer.setVolume(50);
         trackScheduler = new TrackScheduler(audioPlayer);
         audioPlayer.addListener(trackScheduler);
     }
@@ -110,5 +111,9 @@ public class AudioHandler implements AudioSendHandler {
 
     public void showQueue() {
         trackScheduler.showQueue();
+    }
+
+    public Object getNowPlaying() {
+        return trackScheduler.getNowPlaying();
     }
 }
