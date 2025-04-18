@@ -23,6 +23,7 @@ public class AudioHandler implements AudioSendHandler {
     private final TrackScheduler trackScheduler;
     private MessageChannelUnion channel;
     private AudioFrame lastFrame;
+    private static final YoutubeAudioSourceManager youtube = new YoutubeAudioSourceManager(true);
 
     @Override
     public boolean canProvide() {
@@ -41,7 +42,6 @@ public class AudioHandler implements AudioSendHandler {
     }
 
     public AudioHandler() {
-        YoutubeAudioSourceManager youtube = new YoutubeAudioSourceManager(true);             // YouTube audio source manager from youtube-source
         playerManager = new DefaultAudioPlayerManager();                                                // adding the default audio player manager replacing
         playerManager.registerSourceManager(youtube);                                                   // the default one with the youtube-source one
         AudioSourceManagers.registerRemoteSources(playerManager, com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
@@ -64,7 +64,7 @@ public class AudioHandler implements AudioSendHandler {
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
                 if(playlist.isSearchResult()){
-                    AudioTrack firstItem = playlist.getTracks().get(0);
+                    AudioTrack firstItem = playlist.getTracks().getFirst();
                     trackScheduler.queue(firstItem);
                     channel.sendMessage("Added to queue: " + firstItem.getInfo().title).queue();
                 } else {
@@ -72,8 +72,8 @@ public class AudioHandler implements AudioSendHandler {
                     for (AudioTrack track : playlist.getTracks()) {
                         trackScheduler.queue(track);
                         size++;
+                        channel.sendMessage("Playlist loaded: " + playlist.getName() + "with " + size + " elements").queue();
                     }
-                    channel.sendMessage("Playlist loaded: " + playlist.getName() + "with " + size + " elements").queue();
                 }
             }
 
@@ -88,8 +88,6 @@ public class AudioHandler implements AudioSendHandler {
                 channel.sendMessage("Could not play " + song + ": " + throwable.getMessage()).queue();
             }
         });
-
-
     }
 
     public void skipTrack() {
@@ -109,11 +107,15 @@ public class AudioHandler implements AudioSendHandler {
         trackScheduler.setChannel(channel);
     }
 
-    public void showQueue() {
-        trackScheduler.showQueue();
+    public String getQueue() {
+        return trackScheduler.getQueue();
     }
 
     public Object getNowPlaying() {
         return trackScheduler.getNowPlaying();
+    }
+
+    public void toggleRepeat() {
+        //todo
     }
 }

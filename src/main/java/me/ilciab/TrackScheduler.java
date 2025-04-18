@@ -6,7 +6,6 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
-import org.eclipse.jetty.util.ajax.JSON;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ public class TrackScheduler extends AudioEventAdapter {
     private MessageChannelUnion channel;
     private boolean repeating = false;
     private boolean paused = false;
-    boolean isPlaying = false   ;
+    boolean isPlaying = false;
     private final List<AudioTrack> queue = new ArrayList<>();
 
     public TrackScheduler(AudioPlayer player) {
@@ -56,23 +55,19 @@ public class TrackScheduler extends AudioEventAdapter {
         queue.clear();
     }
 
-    public void showQueue() {
+    public String getQueue() {
         if(queue.isEmpty()) {
             channel.sendMessage("Queue is empty").queue();
-            return;
+            return null;
         }
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder queueString = new StringBuilder();
         int i = 1;
-        for (AudioTrack track : queue) {
-            if(sb.length()+track.getInfo().title.length() > 2000) {
-                channel.sendMessage(sb.toString()).queue();
-                sb = new StringBuilder();
-            }
-            sb.append(i).append(" - ").append(track.getInfo().title).append("\n");
+        for (AudioTrack track : this.queue) {
+            queueString.append(i).append(" - ").append(track.getInfo().title).append("\n");
             i++;
         }
-        channel.sendMessage(sb.toString()).queue();
+        return queueString.toString();
 
     }
 
@@ -94,11 +89,17 @@ public class TrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        if(endReason == AudioTrackEndReason.LOAD_FAILED){
+            skipTrack();
+            return;
+        }
         if (endReason.mayStartNext) {
-            System.out.println(queue.getFirst());
+            if(queue.isEmpty()) {
+                return;
+            }
             player.startTrack(queue.getFirst(), true);
             queue.removeFirst();
-            queue.removeFirst();
+            return;
         }
 
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).

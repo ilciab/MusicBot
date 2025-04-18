@@ -21,12 +21,7 @@ public class BotApi {
             audioHandler.pause();
             return "⏸️ Riproduzione messa in pausa/ripresa.";
         });
-        post("/volume", (req, res) -> {
-            //int volume = req.body();
-            String body = req.body(); // riceve la canzone come testo semplice
-            audioHandler.play(body);  // passa al bot
-            return "🎵 In riproduzione: " + body;
-        });
+
 
         post("/skip", (req, res) -> {
             audioHandler.skipTrack();
